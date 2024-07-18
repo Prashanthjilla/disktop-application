@@ -1,0 +1,43 @@
+import React, { useState, useEffect } from 'react';
+import { firestore } from './firebase';
+
+const SearchNotes = () => {
+  const [searchQuery, setSearchQuery] = useState('');
+  const [notes, setNotes] = useState([]);
+
+  useEffect(() => {
+    const fetchNotes = async () => {
+      const notesCollection = await firestore.collection('notes').get();
+      setNotes(notesCollection.docs.map(doc => doc.data()));
+    };
+    fetchNotes();
+  }, []);
+
+  const filteredNotes = notes.filter(note =>
+    note.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
+    note.content.toLowerCase().includes(searchQuery.toLowerCase()) ||
+    note.tags.some(tag => tag.toLowerCase().includes(searchQuery.toLowerCase()))
+  );
+
+  return (
+    <div>
+      <input
+        type="text"
+        value={searchQuery}
+        onChange={(e) => setSearchQuery(e.target.value)}
+        placeholder="Search notes"
+      />
+      <div>
+        {filteredNotes.map((note, index) => (
+          <div key={index} style={{ backgroundColor: note.backgroundColor }}>
+            <h2>{note.title}</h2>
+            <p>{note.content}</p>
+            <p>{note.tags.join(', ')}</p>
+          </div>
+        ))}
+      </div>
+    </div>
+  );
+};
+
+export default SearchNotes;
